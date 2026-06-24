@@ -146,6 +146,8 @@ def get_user_info(client, headers, user_info_url: str):
 					'used_quota': used_quota,
 					'display': f':money: Current balance: ${quota}, Used: ${used_quota}',
 				}
+			error_msg = data.get('message', data.get('msg', 'Unknown API error'))
+			return {'success': False, 'error': f'Failed to get user info: {error_msg}'}
 		return {'success': False, 'error': f'Failed to get user info: HTTP {response.status_code}'}
 	except Exception as e:
 		return {'success': False, 'error': f'Failed to get user info: {str(e)[:50]}...'}
@@ -315,6 +317,16 @@ async def check_in_account(account: AccountConfig, account_index: int, app_confi
 			if not user_info_after or not user_info_after.get('success'):
 				await asyncio.sleep(1)
 				user_info_after = get_user_info(client, headers, user_info_url)
+
+			if not user_info_after or not user_info_after.get('success'):
+				if user_info_before and user_info_before.get('success'):
+					print(f'[WARNING] {account_name}: Unable to refresh user info, using initial balance')
+					user_info_after = user_info_before
+				else:
+					error = (user_info_after or user_info_before or {}).get('error', 'Unknown error')
+					print(f'[FAILED] {account_name}: {error}')
+					return False, user_info_before, user_info_after
+
 			return True, user_info_before, user_info_after
 
 	except Exception as e:
