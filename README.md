@@ -58,6 +58,29 @@
    - Name: `ANYROUTER_ACCOUNTS`
    - Value: 你的多账号配置数据
 
+   如果你要同时签到 AnyRouter 和 AgentRouter，建议直接把两个账号都写进同一个 `ANYROUTER_ACCOUNTS`：
+
+   ```json
+   [
+     {
+       "name": "AnyRouter",
+       "provider": "anyrouter",
+       "cookies": {
+         "session": "anyrouter_session"
+       },
+       "api_user": "anyrouter_api_user"
+     },
+     {
+       "name": "AgentRouter",
+       "provider": "agentrouter",
+       "cookies": {
+         "session": "agentrouter_session"
+       },
+       "api_user": "agentrouter_api_user"
+     }
+   ]
+   ```
+
 ### 4. 多账号配置格式
 
 支持单个与多个账号配置，可选 `name` 和 `provider` 字段：

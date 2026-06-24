@@ -300,7 +300,7 @@ async def check_in_account(account: AccountConfig, account_index: int, app_confi
 		user_info_before = get_user_info(client, headers, user_info_url)
 		if user_info_before and user_info_before.get('success'):
 			print(user_info_before['display'])
-		elif user_info_before:
+		elif user_info_before and provider_config.needs_manual_check_in():
 			print(user_info_before.get('error', 'Unknown error'))
 
 		if provider_config.needs_manual_check_in():
@@ -399,6 +399,8 @@ async def main():
 						'success': success,
 					}
 
+					print(format_check_in_notification(account_check_in_details[account_key]))
+
 			if should_notify_this_account:
 				account_name = account.get_display_name(i)
 				status = '[SUCCESS]' if success else '[FAIL]'
@@ -461,7 +463,7 @@ async def main():
 		if success_count == total_count:
 			summary.append('[SUCCESS] All accounts check-in successful!')
 		elif success_count > 0:
-			summary.append('[WARN] Some accounts check-in successful')
+			summary.append('[WARN] Some accounts failed')
 		else:
 			summary.append('[ERROR] All accounts check-in failed')
 
@@ -476,7 +478,7 @@ async def main():
 		print('[INFO] All accounts successful and no balance changes detected, notification skipped')
 
 	# 设置退出码
-	sys.exit(0 if success_count > 0 else 1)
+	sys.exit(0 if success_count == total_count else 1)
 
 
 def run_main():

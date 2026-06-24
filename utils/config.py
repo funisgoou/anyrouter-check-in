@@ -36,7 +36,7 @@ class ProviderConfig:
 		if not required_waf_cookies:
 			self.bypass_method = None
 
-		self.waf_cookie_names = list(required_waf_cookies)
+		self.waf_cookie_names = sorted(required_waf_cookies)
 
 	@classmethod
 	def from_dict(cls, name: str, data: dict) -> 'ProviderConfig':
@@ -93,8 +93,8 @@ class AppConfig:
 				sign_in_path=None,  # 无需签到接口，查询用户信息时自动完成签到
 				user_info_path='/api/user/self',
 				api_user_key='new-api-user',
-				bypass_method='waf_cookies',
-				waf_cookie_names=['acw_tc'],
+				bypass_method=None,
+				waf_cookie_names=None,
 			),
 		}
 
