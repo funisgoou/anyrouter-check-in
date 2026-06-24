@@ -312,6 +312,9 @@ async def check_in_account(account: AccountConfig, account_index: int, app_confi
 			print(f'[INFO] {account_name}: Check-in completed automatically (triggered by user info request)')
 			# 自动签到的情况，再次获取用户信息
 			user_info_after = get_user_info(client, headers, user_info_url)
+			if not user_info_after or not user_info_after.get('success'):
+				await asyncio.sleep(1)
+				user_info_after = get_user_info(client, headers, user_info_url)
 			return True, user_info_before, user_info_after
 
 	except Exception as e:
@@ -366,6 +369,7 @@ async def main():
 				current_quota = user_info_after['quota']
 				current_used = user_info_after['used_quota']
 				current_balances[account_key] = {'quota': current_quota, 'used': current_used}
+				print(f'[INFO] {account.get_display_name(i)}: {user_info_after["display"]}')
 
 				# 计算签到收益
 				if user_info_before and user_info_before.get('success'):
