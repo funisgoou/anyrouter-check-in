@@ -288,7 +288,7 @@ async def check_in_account(account: AccountConfig, account_index: int, app_confi
 
 	all_cookies = await prepare_cookies(account_name, provider_config, user_cookies)
 	if not all_cookies:
-		return False, None
+		return False, None, None
 
 	client = httpx.Client(http2=True, timeout=30.0)
 
@@ -505,7 +505,7 @@ async def main():
 		print('[INFO] All accounts successful and no balance changes detected, notification skipped')
 
 	# 设置退出码
-	sys.exit(0 if success_count == total_count else 1)
+	sys.exit(0 if success_count > 0 else 1)
 
 
 def run_main():

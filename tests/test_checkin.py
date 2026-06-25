@@ -53,6 +53,22 @@ async def test_missing_provider_returns_complete_result_tuple():
 
 
 @pytest.mark.asyncio
+async def test_cookie_preparation_failure_returns_complete_result_tuple():
+	account = AccountConfig(
+		name='AgentRouter',
+		provider='agentrouter',
+		cookies={'session': 'test-session'},
+		api_user='12345',
+	)
+	app_config = AppConfig.load_from_env()
+
+	with patch('checkin.prepare_cookies', new=AsyncMock(return_value=None)):
+		result = await check_in_account(account, 0, app_config)
+
+	assert result == (False, None, None)
+
+
+@pytest.mark.asyncio
 async def test_auto_check_in_fails_when_user_info_cannot_be_loaded():
 	account = AccountConfig(
 		name='AgentRouter',
