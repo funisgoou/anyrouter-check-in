@@ -135,7 +135,18 @@ def get_user_info(client, headers, user_info_url: str):
 		response = client.get(user_info_url, headers=headers, timeout=30)
 
 		if response.status_code == 200:
-			data = response.json()
+			try:
+				data = response.json()
+			except json.JSONDecodeError:
+				content_type = response.headers.get('content-type', 'unknown')
+				body_preview = ' '.join(response.text.split())[:120]
+				return {
+					'success': False,
+					'error': (
+						f'Failed to get user info: HTTP 200 returned non-JSON '
+						f'({content_type}): {body_preview or "empty response"}'
+					),
+				}
 			if data.get('success'):
 				user_data = data.get('data', {})
 				quota = round(user_data.get('quota', 0) / 500000, 2)
@@ -266,7 +277,7 @@ async def check_in_account(account: AccountConfig, account_index: int, app_confi
 	provider_config = app_config.get_provider(account.provider)
 	if not provider_config:
 		print(f'[FAILED] {account_name}: Provider "{account.provider}" not found in configuration')
-		return False, None
+		return False, None, None
 
 	print(f'[INFO] {account_name}: Using provider "{account.provider}" ({provider_config.domain})')
 

@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -19,6 +20,36 @@ def test_get_user_info_reports_api_error():
 	result = get_user_info(client, {}, 'https://example.com/api/user/self')
 
 	assert result == {'success': False, 'error': 'Failed to get user info: Not logged in'}
+
+
+def test_get_user_info_reports_non_json_response():
+	client = MagicMock()
+	client.get.return_value.status_code = 200
+	client.get.return_value.json.side_effect = json.JSONDecodeError('invalid JSON', '', 0)
+	client.get.return_value.headers = {'content-type': 'text/html'}
+	client.get.return_value.text = '<html> Access denied </html>'
+
+	result = get_user_info(client, {}, 'https://example.com/api/user/self')
+
+	assert result == {
+		'success': False,
+		'error': 'Failed to get user info: HTTP 200 returned non-JSON (text/html): <html> Access denied </html>',
+	}
+
+
+@pytest.mark.asyncio
+async def test_missing_provider_returns_complete_result_tuple():
+	account = AccountConfig(
+		name='Unknown',
+		provider='unknown',
+		cookies={'session': 'test-session'},
+		api_user='12345',
+	)
+	app_config = AppConfig.load_from_env()
+
+	result = await check_in_account(account, 0, app_config)
+
+	assert result == (False, None, None)
 
 
 @pytest.mark.asyncio
