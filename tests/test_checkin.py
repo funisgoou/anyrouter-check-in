@@ -131,3 +131,28 @@ async def test_auto_check_in_uses_initial_balance_when_refresh_fails():
 	assert before == initial_info
 	assert after == initial_info
 	client.close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_request_headers_do_not_advertise_unsupported_compression():
+	account = AccountConfig(
+		name='TokenDock',
+		provider='tokendock',
+		cookies={'session': 'test-session'},
+		api_user='89',
+	)
+	app_config = AppConfig.load_from_env()
+	app_config.providers['tokendock'] = app_config.providers['agentrouter']
+	client = MagicMock()
+	user_info = {'success': True, 'quota': 10.0, 'used_quota': 2.0, 'display': 'balance'}
+
+	with (
+		patch('checkin.prepare_cookies', new=AsyncMock(return_value={'session': 'test-session'})),
+		patch('checkin.httpx.Client', return_value=client),
+		patch('checkin.get_user_info', return_value=user_info) as mock_get_user_info,
+	):
+		success, _, _ = await check_in_account(account, 0, app_config)
+
+	assert success is True
+	headers = mock_get_user_info.call_args_list[0].args[1]
+	assert 'Accept-Encoding' not in headers
